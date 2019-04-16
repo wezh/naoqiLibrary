@@ -5,6 +5,7 @@ import os
 import io
 import datetime
 import time
+import sys
 
 #Import Folder looping API
 import glob
@@ -20,6 +21,7 @@ import cv2
 
 #Import NAOqi proxy API
 from naoqi import *
+import qi
 
 #import google speech environment
 from google.cloud import speech
@@ -37,7 +39,8 @@ ROBOT_PORT = 9559
 #List of Photo and Audio Path and File in NAO Robot
 nao_recordingPath = "/home/nao/Library/recordingTemp/"
 nao_photoPath = "/home/nao/Library/queryTemp/"
-nao_recordingFile = "/home/nao/Library/recordingTemp/recording.wav"
+#nao_recordingFile = "/home/nao/recording/recording.wav"
+nao_recordingFile = "/home/nao/Library/recordingTemp/first.wav"
 
 #List of Photo and Audio File in local computer
 local_recordingPath = "./recording/"
@@ -86,7 +89,28 @@ def TransferFile(ROBOT_IP, user, passwd, remoteFilePath, localFilePath):
     except Exception:
         print("connect error!")
 
+def barcode_reader(session):
+
+    barcode_service = session.service("ALBarcodeReader")
+    memory_service = session.service("ALMemory")
+
+    barcode_service.subscribe("test_barcode")
+
+    for range_counter in range(20):
+        data = memory_service.getData("BarcodeReader/BarcodeDetected")
+        if (len(data)):
+            break
+        time.sleep(2)
+    return data
+
+def checkBooks(numberOfBorrowedBooks):
+    if numberOfBorrowedBooks > 0:
+        return True
+    else:
+        return False
+
 #Conncted to NAO ROBOT
+session  = qi.Session()
 try:
     audio = ALProxy("ALAudioDevice", ROBOT_IP, ROBOT_PORT)
     record = ALProxy("ALAudioRecorder", ROBOT_IP, ROBOT_PORT)
@@ -97,36 +121,62 @@ try:
     memory = ALProxy("ALMemory", ROBOT_IP, ROBOT_PORT)
     barcode = ALProxy("ALBarcodeReader", ROBOT_IP, ROBOT_PORT)
     broker = ALBroker("pythonBroker", "0.0.0.0", 0, ROBOT_IP, ROBOT_PORT)
-
 except Exception, e:
     print (str(e))
     exit(1)
 
+try:
+    session.connect("tcp://" + ROBOT_IP + ":" + str(ROBOT_PORT))
+
+except RuntimeError:
+    print("Can't connect to Naoqi at ip \"" + ROBOT_IP + "\" on port " + ROBOT_PORT + ".\n" + "Please check your script arguments. Run with -h option for help.")
+    sys.exit(1)
+
 current_hour = datetime.datetime.today().hour
-print (current_hour)
 
 if (current_hour < 12):
-    tts.say("Good morning! Welcome to Vaasa Library! What can I do for you?")
+    tts.say("Good morning! Welcome to Vaasa Library! Please show me your code")
 elif(current_hour < 19):
-    tts.say("Good afternoon! Welcome to Vaasa Library! What can I do for you?")
+    tts.say("Good afternoon! Welcome to Vaasa Library! Please show me your code")
 elif(current_hour <= 24):
-    tts.say("Good evening! Welcome to Vaasa Library! What can I do for you?")
+    tts.say("Good evening! Welcome to Vaasa Library! Please show me your code")
+
+identity = barcode_reader(session)
+tts.say("Barcode has read.")
+name = str(identity[0][0]).split(',')[0]
+print (name)
+numberOfBorrowedBooks = int(str(identity[0][0]).split(',')[2])
+print(numberOfBorrowedBooks)
+tts.say("Welcome!" + name)
+if(checkBooks(numberOfBorrowedBooks) and numberOfBorrowedBooks == 0):
+    tts.say("You don't have any books in your account. What can I do for you?")
+elif (checkBooks(numberOfBorrowedBooks) and numberOfBorrowedBooks == 1):
+    tts.say("You are keeping" + str(numberOfBorrowedBooks) + " book. What can I do for you?")
+elif(checkBooks((numberOfBorrowedBooks) and numberOfBorrowedBooks > 1)):
+    tts.say("You are keeping " + str(numberOfBorrowedBooks) + " books. What can I do for you?")
+
+#while True:
 
 #Start Recording from NAO AUDIO DEVICE
 print('#########################################################')
 print('start recording.')
+tts.say('start recording')
 print('#########################################################')
-nao_recordingFile = '/home/nao/Library/recordingTemp/recording.wav'
+#nao_recordingFile = '/home/nao/Library/recordingTemp/recording.wav'
 record.startMicrophonesRecording(nao_recordingFile, 'wav', 16000, (0, 0, 1, 0))
-time.sleep(3)
+time.sleep(5)
 record.stopMicrophonesRecording()
 print('stop recording.')
+tts.say("stop recording.")
 
 TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
 
 speech = SpeechTransferToText(local_recordingFile)
 
-CheckList = ("borrow")
+
+
+CheckList = ("ladies")
+
 if any(s in speech for s in CheckList):
     print ("key word: #borrow# GET!")
     tts.say("Sure! I am going to take a picture of the book you would like to take")
@@ -185,6 +235,8 @@ for queryPath in queryPaths:
                 print("{}. {:.2f}% : {} - {}".format(i + 1, score * 100, author, title))
                 result = cv2.imread(coverPath)
                 cv2.imshow("Query", queryImage)
-                cv2.imshow("Result", result)  
+                cv2.imshow("Result", result)
                 print('##############################################')
                 cv2.waitKey(0)
+
+    tts.say("What can do for you?")

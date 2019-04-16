@@ -4,6 +4,7 @@ import sys
 import time
 
 ROBOT_IP = "192.168.1.105"
+ROBOT_PORT = 9559
 
 def barcode_reader(session):
 
@@ -19,22 +20,23 @@ def barcode_reader(session):
         time.sleep(2)
     return data
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--ip", type=str, default="192.168.1.105",
-                        help="Robot IP address. On robot or Local Naoqi: use '192.168.1.105'.")
-
-parser.add_argument("--port", type=int, default=9559,
-                        help="Naoqi port number")
-args = parser.parse_args()
+print ("Start")
 session = qi.Session()
+
 try:
-    session.connect("tcp://" + args.ip + ":" + str(args.port))
-except  RuntimeError:
-    print ("Can't connect to Naoqi at ip \"" + ROBOT_IP + "\" on port " + str(args.port) + ".\n"
+    session.connect("tcp://" + ROBOT_IP + ":" + str(ROBOT_PORT))
+except RuntimeError:
+    print ("Can't connect to Naoqi at ip \"" + ROBOT_IP + "\" on port " + ROBOT_PORT + ".\n"
                                                                                           "Please check your script arguments. Run with -h option for help.")
     sys.exit(1)
 
-text = barcode_reader(session)
-information = text[0][0]
-info_string = str(information)
-print(info_string.split(',')[0])
+identity = barcode_reader(session)
+name = str(identity[0][0]).split(',')[0]
+borrowedbooks = int(str(identity[0][0]).split(',')[2])
+print (name)
+print (borrowedbooks)
+
+# text = barcode_reader(session)
+# information = text[0][0]
+# info_string = str(information)
+# print(info_string.split(',')[0])
