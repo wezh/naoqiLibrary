@@ -103,6 +103,25 @@ def barcode_reader(session):
         time.sleep(2)
     return data
 
+def recordAudioFromNao():
+    # Start Recording from NAO AUDIO DEVICE
+    print('#########################################################')
+    print('start recording.')
+    tts.say('start recording')
+    # nao_recordingFile = '/home/nao/Library/recordingTemp/recording.wav'
+    record.startMicrophonesRecording(nao_recordingFile, 'wav', 16000, (0, 0, 1, 0))
+    time.sleep(5)
+    record.stopMicrophonesRecording()
+    print('stop recording.')
+    tts.say("stop recording.")
+    print('#########################################################')
+
+def photoCapture():
+    time.sleep(3)
+    photo.setResolution(2)
+    photo.setPictureFormat("png")
+    photo.takePictures(1, "/home/nao/Library/queryTemp/", "query")
+
 def checkBooks(numberOfBorrowedBooks):
     if numberOfBorrowedBooks > 0:
         return True
@@ -148,66 +167,132 @@ id_number = str(identity[0][0]).split(',')[1]
 numberOfBorrowedBooks = int(str(identity[0][0]).split(',')[2])
 print (name)
 print (id_number)
-print(numberOfBorrowedBooks)
+print("number of books: " + numberOfBorrowedBooks)
 tts.say("Welcome!" + name + "! Your id is" + id_number)
 
 if(checkBooks(numberOfBorrowedBooks) and numberOfBorrowedBooks == 0):
-    tts.say("You don't have any books in your account. What can I do for you?")
+    tts.say("You don't have any books in your account.")
 elif (checkBooks(numberOfBorrowedBooks) and numberOfBorrowedBooks == 1):
-    tts.say("You borrowed " + str(numberOfBorrowedBooks) + " book. What can I do for you?")
+    tts.say("You borrowed " + str(numberOfBorrowedBooks) + " book.")
 elif(checkBooks((numberOfBorrowedBooks) and numberOfBorrowedBooks > 1)):
-    tts.say("You borrowed " + str(numberOfBorrowedBooks) + " books. What can I do for you?")
+    tts.say("You borrowed " + str(numberOfBorrowedBooks) + " books.")
 
 #while True:
+tts.say("What can I do for you?")
+exit_flag = False
+while True:
+
+    recordAudioFromNao()
+
+    #Start Recording from NAO AUDIO DEVICE
+    # print('#########################################################')
+    # print('start recording.')
+    # tts.say('start recording')
+    #nao_recordingFile = '/home/nao/Library/recordingTemp/recording.wav'
+    # record.startMicrophonesRecording(nao_recordingFile, 'wav', 16000, (0, 0, 1, 0))
+    # time.sleep(5)
+    # record.stopMicrophonesRecording()
+    # print('stop recording.')
+    # tts.say("stop recording.")
+    # print('#########################################################')
+
+    TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
+    answer = SpeechTransferToText(local_recordingFile)
+
+    checklist_borrow = ("borrow", "take")
+    checklist_return = ("return")
+    checklist_end = ("no")
+
+    if any(s in answer for s in checklist_borrow):
+        print ("key word GET!")
+        tts.say("Sure! I am going to take a picture of the book you would like to borrow")
+        # take book cover picture
+        # time.sleep(3)
+        # photo.setResolution(2)
+        # photo.setPictureFormat("png")
+        # photo.takePictures(1, "/home/nao/Library/queryTemp/", "query")
+        while True:
+            photoCapture()
+            tts.say("Finnished")
+
+            TransferFile(ROBOT_IP, user, passwd, nao_photoPath, local_photoPath)
+            print ("transfer photo correctly!")
+            print('##############################################')
+
+            # Book Cover Matching Porcess
+            ap.add_argument("-s", "--sift", type=int, default=0, help="whether or not SIFT should be used")
+
+            args = vars(ap.parse_args())
+
+            db = {}
+
+            for l in csv.reader(open("books.csv")):
+                db[l[0]] = l[1:]
+
+            useSIFT = args["sift"] > 0
+            useHamming = args["sift"] == 0
+            ratio = 0.7
+            minMatches = 40
+
+            if useSIFT:
+                minMatches = 50
+            cd = CoverDescriptor(useSIFT=useSIFT)
+            cm = CoverMatcher(cd, glob.glob("./cover/*.png"),
+                              ratio=ratio, minMatches=minMatches, useHamming=useHamming)
+
+            # querying process
+            queryPaths = glob.glob("./querys/*.png")
+            for queryPath in queryPaths:
+                queryImage = cv2.imread(queryPath)
+                gray = cv2.cvtColor(queryImage, cv2.COLOR_BGR2GRAY)
+                (queryKps, queryDescs) = cd.describe(gray)
+
+                results = cm.search(queryKps, queryDescs)
+
+                # for item in results:
+                #     if item[0] > 0.3:
+                #         cv2.imshow("Query", queryImage)
+
+                if len(results) == 0:
+                    print("I could not find a match for that cover!")
+                    print('##############################################')
+
+                else:
+                    for (i, (score, coverPath)) in enumerate(results):
+                        if (score > 0.5):
+                            (author, title) = db[coverPath[coverPath.rfind("/") + 1:]]
+                            print("{}. {:.2f}% : {} - {}".format(i + 1, score * 100, author, title))
+                            result = cv2.imread(coverPath)
+                            cv2.imshow("Query", queryImage)
+                            cv2.imshow("Result", result)
+                            cv2.waitKey(0)
+                            print('##############################################')
+
+            tts.say("Is this one the correct book you would like to borrow?")
+            recordAudioFromNao()
+            answer = SpeechTransferToText()
+            if "yes" not in answer:
+                tts.say("Ok, Let me take photo again!")
+            else:
+                tts.say("That's good. Anything else I can do for you?")
+                numberOfBorrowedBooks += 1
+                recordAudioFromNao()
+                answer = SpeechTransferToText()
+                if "yes" not in answer:
+                    break
+                else:
 
 
-def reordingFromNao(self, tts, record):
-    # Start Recording from NAO AUDIO DEVICE
-    print('#########################################################')
-    print('start recording.')
-    tts.say('start recording')
-    # nao_recordingFile = '/home/nao/Library/recordingTemp/recording.wav'
-    record.startMicrophonesRecording(nao_recordingFile, 'wav', 16000, (0, 0, 1, 0))
-    time.sleep(5)
-    record.stopMicrophonesRecording()
-    print('stop recording.')
-    tts.say("stop recording.")
-    print('#########################################################')
+    if any(s in answer for s in checklist_return):
 
-#Start Recording from NAO AUDIO DEVICE
-print('#########################################################')
-print('start recording.')
-tts.say('start recording')
-#nao_recordingFile = '/home/nao/Library/recordingTemp/recording.wav'
-record.startMicrophonesRecording(nao_recordingFile, 'wav', 16000, (0, 0, 1, 0))
-time.sleep(5)
-record.stopMicrophonesRecording()
-print('stop recording.')
-tts.say("stop recording.")
-print('#########################################################')
 
-TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
+    if any(s in answer for s in checklist_end):
+        break
 
-speech = SpeechTransferToText(local_recordingFile)
 
-checklist_borrow = ("borrow", "take")
-checklist_return = ("return")
-checklist_end = ("no")
 
-if any(s in speech for s in checklist_borrow):
-    print ("key word: #borrow# GET!")
-    tts.say("Sure! I am going to take a picture of the book you would like to take with")
-    # take book cover picture
-    time.sleep(3)
-    photo.setResolution(2)
-    photo.setPictureFormat("png")
-    photo.takePictures(1, "/home/nao/Library/queryTemp/", "query")
-    tts.say("Finnished")
 
-#transfer picture from NAO Robot to local
-TransferFile(ROBOT_IP, user, passwd, nao_photoPath, local_photoPath)
-print ("transfer photo correctly!")
-print('##############################################')
+
 
 #Book Cover Matching Porcess
 ap.add_argument("-s", "--sift", type=int, default=0, help="whether or not SIFT should be used")
