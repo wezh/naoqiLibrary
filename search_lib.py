@@ -160,6 +160,20 @@ elif(checkBooks((numberOfBorrowedBooks) and numberOfBorrowedBooks > 1)):
 
 #while True:
 
+
+def reordingFromNao(self, tts, record):
+    # Start Recording from NAO AUDIO DEVICE
+    print('#########################################################')
+    print('start recording.')
+    tts.say('start recording')
+    # nao_recordingFile = '/home/nao/Library/recordingTemp/recording.wav'
+    record.startMicrophonesRecording(nao_recordingFile, 'wav', 16000, (0, 0, 1, 0))
+    time.sleep(5)
+    record.stopMicrophonesRecording()
+    print('stop recording.')
+    tts.say("stop recording.")
+    print('#########################################################')
+
 #Start Recording from NAO AUDIO DEVICE
 print('#########################################################')
 print('start recording.')
@@ -176,9 +190,11 @@ TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
 
 speech = SpeechTransferToText(local_recordingFile)
 
-CheckList = ("borrow", "take")
+checklist_borrow = ("borrow", "take")
+checklist_return = ("return")
+checklist_end = ("no")
 
-if any(s in speech for s in CheckList):
+if any(s in speech for s in checklist_borrow):
     print ("key word: #borrow# GET!")
     tts.say("Sure! I am going to take a picture of the book you would like to take with")
     # take book cover picture
@@ -187,6 +203,11 @@ if any(s in speech for s in CheckList):
     photo.setPictureFormat("png")
     photo.takePictures(1, "/home/nao/Library/queryTemp/", "query")
     tts.say("Finnished")
+
+#transfer picture from NAO Robot to local
+TransferFile(ROBOT_IP, user, passwd, nao_photoPath, local_photoPath)
+print ("transfer photo correctly!")
+print('##############################################')
 
 #Book Cover Matching Porcess
 ap.add_argument("-s", "--sift", type=int, default=0, help="whether or not SIFT should be used")
@@ -209,9 +230,7 @@ cd = CoverDescriptor(useSIFT=useSIFT)
 cm = CoverMatcher(cd, glob.glob("./cover/*.png"),
                   ratio=ratio, minMatches=minMatches, useHamming=useHamming)
 
-#transfer picture from NAO Robot to local
-TransferFile(ROBOT_IP, user, passwd, nao_photoPath, local_photoPath)
-print ("transfer photo correctly!")
+
 
 #querying process
 queryPaths = glob.glob("./querys/*.png")
@@ -238,7 +257,8 @@ for queryPath in queryPaths:
                 result = cv2.imread(coverPath)
                 cv2.imshow("Query", queryImage)
                 cv2.imshow("Result", result)
-                print('##############################################')
                 cv2.waitKey(0)
+                print('##############################################')
+                tts.say("Is this one the correct book you would like to take?")
 
-    tts.say("Is this one the correct book you would like to take?")
+
