@@ -95,16 +95,12 @@ try:
     tts = ALProxy("ALTextToSpeech", ROBOT_IP, ROBOT_PORT)
     asr = ALProxy("ALSpeechRecognition", ROBOT_IP, ROBOT_PORT)
     memory = ALProxy("ALMemory", ROBOT_IP, ROBOT_PORT)
+    barcode = ALProxy("ALBarcodeReader", ROBOT_IP, ROBOT_PORT)
+    broker = ALBroker("pythonBroker", "0.0.0.0", 0, ROBOT_IP, ROBOT_PORT)
 
 except Exception, e:
     print (str(e))
     exit(1)
-
-
-# asr.setLanguage("English")
-# vocabulary = ["ready", "wait", "hi", "hello"]
-# asr.pause(True)
-# asr.setVocabulary(vocabulary, False)
 
 current_hour = datetime.datetime.today().hour
 print (current_hour)
@@ -130,24 +126,18 @@ TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
 
 speech = SpeechTransferToText(local_recordingFile)
 
-tts.say("Sure! I am going to take a picture of the book you would like to take")
+CheckList = ("borrow")
+if any(s in speech for s in CheckList):
+    print ("key word: #borrow# GET!")
+    tts.say("Sure! I am going to take a picture of the book you would like to take")
+    # take book cover picture
+    time.sleep(3)
+    photo.setResolution(2)
+    photo.setPictureFormat("png")
+    photo.takePictures(1, "/home/nao/Library/queryTemp/", "query")
+    tts.say("Finnished")
 
-
-# Start the speech recognition engine with user Test_ASR
-# asr.subscribe("Test_ASR")
-# print ('Speech recognition engine started')
-# time.sleep(10)
-# asr.unsubscribe("Test_ASR")
-
-
-#take book cover picture
-time.sleep(3)
-photo.setResolution(2)
-photo.setPictureFormat("png")
-photo.takePictures(1, "/home/nao/Library/queryTemp/", "query")
-tts.say("Finnished")
-
-
+#Book Cover Matching Porcess
 ap.add_argument("-s", "--sift", type=int, default=0, help="whether or not SIFT should be used")
 
 args = vars(ap.parse_args())
