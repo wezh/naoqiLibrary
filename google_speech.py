@@ -53,7 +53,7 @@ client = speech.SpeechClient()
 # The name of the audio file to transcribe
 file_name = os.path.join(
     os.path.dirname(__file__),
-    'greeting3.wav')
+    './recording/greeting.wav')
 
  
 # Loads the audio into memory

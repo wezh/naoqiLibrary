@@ -26,29 +26,72 @@ from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 
-#set Robot IP and PORT and File Path
-global tts, audio, record, audioplayer
+#set Robot IP and PORT
+global tts, audio, record, audioplayer, photo
 ap = argparse.ArgumentParser()
 user = "nao"
 passwd = "nimdA"
 ROBOT_IP = "192.168.1.105"
 ROBOT_PORT = 9559
 
-#List of Photo and Audio Path and File
+#List of Photo and Audio Path and File in NAO Robot
 nao_recordingPath = "/home/nao/Library/recordingTemp/"
 nao_photoPath = "/home/nao/Library/queryTemp/"
 nao_recordingFile = "/home/nao/Library/recordingTemp/recording.wav"
-local_recordingPath = "./recording/"
-local_recordingFile = "./recording/recording.wav"
 
+#List of Photo and Audio File in local computer
+local_recordingPath = "./recording/"
+local_recordingFile = "./recording/greeting.wav"
 local_photoPath = "./querys/"
+
+#Speech to Text Method By Google Speech API
+def SpeechTransferToText(speech_file):
+
+    #connect to google speech service
+    # Instantiates a client
+    client = speech.SpeechClient()
+
+    # Loads the audio into memory
+    with io.open(speech_file, 'rb') as audio_file:
+        content = audio_file.read()
+        audio = types.RecognitionAudio(content=content)
+        config = types.RecognitionConfig(
+            encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
+            sample_rate_hertz=16000,
+            language_code='en-US')
+
+    # Detects speech in the audio file
+    response = client.recognize(config, audio)
+
+    for result in response.results:
+        text = "{}".format(result.alternatives[0].transcript)
+        print(text)
+        return text
+
+#Transfer audio or query files from NAO Robot
+def TransferFile(ROBOT_IP, user, passwd, remoteFilePath, localFilePath):
+    try:
+        t = paramiko.Transport((ROBOT_IP, 22))
+        t.connect(username=user, password=passwd)
+        sftp = paramiko.SFTPClient.from_transport(t)
+        files = sftp.listdir(remoteFilePath)
+        for f in files:
+            print('##############################################')
+            print('Beginning to download audio file from %s %s' % (ROBOT_IP, datetime.datetime.now()))
+            print('Downloading audio file:', os.path.join(remoteFilePath, f))
+            sftp.get(os.path.join(remoteFilePath, f), os.path.join(localFilePath, f))
+            print('Download audio file success %s' % datetime.datetime.now())
+            print('##############################################')
+        t.close()
+    except Exception:
+        print("connect error!")
 
 #Conncted to NAO ROBOT
 try:
     audio = ALProxy("ALAudioDevice", ROBOT_IP, ROBOT_PORT)
     record = ALProxy("ALAudioRecorder", ROBOT_IP, ROBOT_PORT)
     audioplayer = ALProxy("ALAudioPlayer", ROBOT_IP, ROBOT_PORT)
-    photoCaptureProxy = ALProxy("ALPhotoCapture", ROBOT_IP, ROBOT_PORT)
+    photo = ALProxy("ALPhotoCapture", ROBOT_IP, ROBOT_PORT)
     tts = ALProxy("ALTextToSpeech", ROBOT_IP, ROBOT_PORT)
     asr = ALProxy("ALSpeechRecognition", ROBOT_IP, ROBOT_PORT)
     memory = ALProxy("ALMemory", ROBOT_IP, ROBOT_PORT)
@@ -57,81 +100,37 @@ except Exception, e:
     print (str(e))
     exit(1)
 
+
+# asr.setLanguage("English")
+# vocabulary = ["ready", "wait", "hi", "hello"]
+# asr.pause(True)
+# asr.setVocabulary(vocabulary, False)
+
+current_hour = datetime.datetime.today().hour
+print (current_hour)
+
+if (current_hour < 12):
+    tts.say("Good morning! Welcome to Vaasa Library! What can I do for you?")
+elif(current_hour < 19):
+    tts.say("Good afternoon! Welcome to Vaasa Library! What can I do for you?")
+elif(current_hour <= 24):
+    tts.say("Good evening! Welcome to Vaasa Library! What can I do for you?")
+
 #Start Recording from NAO AUDIO DEVICE
-print("Welcome to NAO Robot Platform!")
 print('#########################################################')
-print('start recording...')
+print('start recording.')
 print('#########################################################')
 nao_recordingFile = '/home/nao/Library/recordingTemp/recording.wav'
 record.startMicrophonesRecording(nao_recordingFile, 'wav', 16000, (0, 0, 1, 0))
-time.sleep(4)
+time.sleep(3)
 record.stopMicrophonesRecording()
-print('record over')
+print('stop recording.')
 
-#Transfer audio file to local machine
-try:
-    t = paramiko.Transport((ROBOT_IP, 22))
-    t.connect(username=user, password=passwd)
-    sftp = paramiko.SFTPClient.from_transport(t)
-    files = sftp.listdir(nao_recordingPath)
-    for f in files:
-        print ('##############################################')
-        print ('Beginning to download audio file from %s %s' % (ROBOT_IP, datetime.datetime.now()))
-        print ('Downloading audio file:', os.path.join(nao_recordingPath, f))
-        sftp.get(os.path.join(nao_recordingPath, f), os.path.join(local_recordingPath, f))
-        print ('Download audio file success %s' % datetime.datetime.now())
-        print ('##############################################')
-    t.close()
-except Exception:
-    print ("connect error!")
+TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
 
-#connect to google speech service
-# Instantiates a client
-client = speech.SpeechClient()
+speech = SpeechTransferToText(local_recordingFile)
 
-file_name = os.path.join(
-    os.path.dirname(__file__),
-    local_recordingFile)
-
-# Loads the audio into memory
-with io.open(file_name, 'rb') as audio_file:
-    content = audio_file.read()
-    audio = types.RecognitionAudio(content=content)
-
-config = types.RecognitionConfig(
-    encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
-    sample_rate_hertz=16000,
-    language_code='en-US')
-
-# Detects speech in the audio file
-response = client.recognize(config, audio)
-
-for result in response.results:
-    print('Transcript: {}'.format(result.alternatives[0].transcript))
-
-
-ap.add_argument("-s", "--sift", type=int, default=0, help="whether or not SIFT should be used")
-
-args = vars(ap.parse_args())
-
-#Connected to NAOqi
-try:
-    photoCaptureProxy = ALProxy("ALPhotoCapture", ROBOT_IP, ROBOT_PORT)
-    tts = ALProxy("ALTextToSpeech", ROBOT_IP, ROBOT_PORT)
-    asr = ALProxy("ALSpeechRecognition", ROBOT_IP, ROBOT_PORT)
-    memory = ALProxy("ALMemory", ROBOT_IP, ROBOT_PORT)
-
-
-except Exception, e:
-    print ("Error when creating ALPhotoCapture proxy:")
-    print (str(e))
-    exit(1)
-
-asr.setLanguage("English")
-vocabulary = ["ready", "wait", "hi", "hello"]
-asr.pause(True)
-asr.setVocabulary(vocabulary, False)
-tts.say("Hi! I am going to take a picture you showed")
+tts.say("Sure! I am going to take a picture of the book you would like to take")
 
 
 # Start the speech recognition engine with user Test_ASR
@@ -140,13 +139,18 @@ tts.say("Hi! I am going to take a picture you showed")
 # time.sleep(10)
 # asr.unsubscribe("Test_ASR")
 
+
 #take book cover picture
 time.sleep(3)
-photoCaptureProxy.setResolution(2)
-photoCaptureProxy.setPictureFormat("png")
-photoCaptureProxy.takePictures(1, "/home/nao/Library/queryTemp/", "query")
+photo.setResolution(2)
+photo.setPictureFormat("png")
+photo.takePictures(1, "/home/nao/Library/queryTemp/", "query")
 tts.say("Finnished")
 
+
+ap.add_argument("-s", "--sift", type=int, default=0, help="whether or not SIFT should be used")
+
+args = vars(ap.parse_args())
 
 db = {}
 
@@ -164,23 +168,8 @@ cd = CoverDescriptor(useSIFT=useSIFT)
 cm = CoverMatcher(cd, glob.glob("./cover/*.png"),
                   ratio=ratio, minMatches=minMatches, useHamming=useHamming)
 
-#transfer taken book cover from NAO Robot to local computer
-try:
-    t = paramiko.Transport((ROBOT_IP, 22))
-    t.connect(username=user, password=passwd)
-    sftp = paramiko.SFTPClient.from_transport(t)
-    files = sftp.listdir(nao_photoPath)
-    for f in files:
-        print ('##############################################')
-        print ('Beginning to download file from %s %s' % (ROBOT_IP, datetime.datetime.now()))
-        print ('Downloading file:', os.path.join(nao_photoPath, f))
-        sftp.get(os.path.join(nao_photoPath, f), os.path.join(local_photoPath, f))
-        print ('Download file success %s' % datetime.datetime.now())
-        print ('##############################################')
-    t.close()
-except Exception:
-    print ("connect error!")
-
+#transfer picture from NAO Robot to local
+TransferFile(ROBOT_IP, user, passwd, nao_photoPath, local_photoPath)
 
 #querying process
 queryPaths = glob.glob("./querys/*.png")
