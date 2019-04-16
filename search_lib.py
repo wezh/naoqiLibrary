@@ -135,25 +135,28 @@ except RuntimeError:
 current_hour = datetime.datetime.today().hour
 
 if (current_hour < 12):
-    tts.say("Good morning! Welcome to Vaasa Library! Please show me your code")
+    tts.say("Good morning! Welcome to Vaasa Library! Show me your code to identify yourself!")
 elif(current_hour < 19):
-    tts.say("Good afternoon! Welcome to Vaasa Library! Please show me your code")
+    tts.say("Good afternoon! Welcome to Vaasa Library! Show me your code to identify yourself!")
 elif(current_hour <= 24):
-    tts.say("Good evening! Welcome to Vaasa Library! Please show me your code")
+    tts.say("Good evening! Welcome to Vaasa Library! Show me your code to identify yourself!")
 
 identity = barcode_reader(session)
 tts.say("Barcode has read.")
 name = str(identity[0][0]).split(',')[0]
-print (name)
+id_number = str(identity[0][0]).split(',')[1]
 numberOfBorrowedBooks = int(str(identity[0][0]).split(',')[2])
+print (name)
+print (id_number)
 print(numberOfBorrowedBooks)
-tts.say("Welcome!" + name)
+tts.say("Welcome!" + name + "! Your id is" + id_number)
+
 if(checkBooks(numberOfBorrowedBooks) and numberOfBorrowedBooks == 0):
     tts.say("You don't have any books in your account. What can I do for you?")
 elif (checkBooks(numberOfBorrowedBooks) and numberOfBorrowedBooks == 1):
-    tts.say("You are keeping" + str(numberOfBorrowedBooks) + " book. What can I do for you?")
+    tts.say("You borrowed " + str(numberOfBorrowedBooks) + " book. What can I do for you?")
 elif(checkBooks((numberOfBorrowedBooks) and numberOfBorrowedBooks > 1)):
-    tts.say("You are keeping " + str(numberOfBorrowedBooks) + " books. What can I do for you?")
+    tts.say("You borrowed " + str(numberOfBorrowedBooks) + " books. What can I do for you?")
 
 #while True:
 
@@ -161,25 +164,23 @@ elif(checkBooks((numberOfBorrowedBooks) and numberOfBorrowedBooks > 1)):
 print('#########################################################')
 print('start recording.')
 tts.say('start recording')
-print('#########################################################')
 #nao_recordingFile = '/home/nao/Library/recordingTemp/recording.wav'
 record.startMicrophonesRecording(nao_recordingFile, 'wav', 16000, (0, 0, 1, 0))
 time.sleep(5)
 record.stopMicrophonesRecording()
 print('stop recording.')
 tts.say("stop recording.")
+print('#########################################################')
 
 TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
 
 speech = SpeechTransferToText(local_recordingFile)
 
-
-
-CheckList = ("ladies")
+CheckList = ("borrow", "take")
 
 if any(s in speech for s in CheckList):
     print ("key word: #borrow# GET!")
-    tts.say("Sure! I am going to take a picture of the book you would like to take")
+    tts.say("Sure! I am going to take a picture of the book you would like to take with")
     # take book cover picture
     time.sleep(3)
     photo.setResolution(2)
@@ -210,6 +211,7 @@ cm = CoverMatcher(cd, glob.glob("./cover/*.png"),
 
 #transfer picture from NAO Robot to local
 TransferFile(ROBOT_IP, user, passwd, nao_photoPath, local_photoPath)
+print ("transfer photo correctly!")
 
 #querying process
 queryPaths = glob.glob("./querys/*.png")
@@ -239,4 +241,4 @@ for queryPath in queryPaths:
                 print('##############################################')
                 cv2.waitKey(0)
 
-    tts.say("What can do for you?")
+    tts.say("Is this one the correct book you would like to take?")
