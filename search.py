@@ -30,14 +30,14 @@ minMatches = 40
 if useSIFT:
     minMatches = 50
 cd = CoverDescriptor(useSIFT=useSIFT)
-cv = CoverMatcher(cd, glob.glob(args["covers"] + "/*.png"),
+cm = CoverMatcher(cd, glob.glob(args["covers"] + "/*.png"),
                   ratio=ratio, minMatches=minMatches, useHamming=useHamming)
 
 queryImage = cv2.imread(args["query"])
 gray = cv2.cvtColor(queryImage, cv2.COLOR_BGR2GRAY)
 (queryKps, queryDescs) = cd.describe(gray)
 
-results = cv.search(queryKps, queryDescs)
+results = cm.search(queryKps, queryDescs)
 print(results)
 
 cv2.imshow("Query", queryImage)
