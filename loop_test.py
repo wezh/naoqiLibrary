@@ -57,6 +57,7 @@ while True:
             results = cm.search(queryKps, queryDescs)
 
             print (results)
+            results = []
 
             if len(results) == 0:
                 print('I can not find a match for that cover! Do you want me to take a photo again?')
