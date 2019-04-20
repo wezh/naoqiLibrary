@@ -5,6 +5,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/Library.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Library.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loop_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/loop_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/querys/query.png" beforeDir="false" afterPath="$PROJECT_DIR$/querys/query.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/recording/recording.wav" beforeDir="false" afterPath="$PROJECT_DIR$/recording/recording.wav" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/search_lib.py" beforeDir="false" afterPath="$PROJECT_DIR$/search_lib.py" afterDir="false" />
@@ -23,10 +24,17 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/search_lib.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="266" column="18" selection-start-line="266" selection-start-column="18" selection-end-line="266" selection-end-column="18" />
+            <state relative-caret-position="366">
+              <caret line="212" column="19" selection-start-line="212" selection-start-column="19" selection-end-line="212" selection-end-column="19" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
+                <element signature="e#7528#14122#0" />
+                <element signature="e#8599#9867#0" />
+                <element signature="e#9195#9240#0" />
+                <element signature="e#9758#9867#0" />
+                <element signature="e#10295#12255#0" />
+                <element signature="e#13890#20480#0" />
+                <element signature="e#20622#20668#0" />
               </folding>
             </state>
           </provider>
@@ -187,16 +195,15 @@
       <workItem from="1555489855230" duration="13711000" />
       <workItem from="1555539063013" duration="14711000" />
       <workItem from="1555598658523" duration="1801000" />
-      <workItem from="1555600481257" duration="4546000" />
+      <workItem from="1555600481257" duration="6709000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="67315000" />
+    <option name="totallyTimeSpent" value="69478000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="-4" width="1855" height="1084" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4993742" weight="0.18518518" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -252,13 +259,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/loop_test.py</url>
-          <line>93</line>
-          <option name="timeStamp" value="45" />
+          <line>65</line>
+          <option name="timeStamp" value="47" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/loop_test.py</url>
-          <line>96</line>
-          <option name="timeStamp" value="46" />
+          <line>114</line>
+          <option name="timeStamp" value="49" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -270,9 +277,9 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Library$loop_test.coverage" NAME="loop_test Coverage Results" MODIFIED="1555603602288" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Library$loop_test.coverage" NAME="loop_test Coverage Results" MODIFIED="1555605176108" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/naoqiLibrary$loop_test.coverage" NAME="loop_test Coverage Results" MODIFIED="1555594095784" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Library$search_lib.coverage" NAME="search_lib Coverage Results" MODIFIED="1555602897777" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Library$search_lib.coverage" NAME="search_lib Coverage Results" MODIFIED="1555605170605" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="watch">
@@ -422,20 +429,29 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/loop_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-144">
-          <caret line="21" selection-start-line="21" selection-end-line="21" />
+        <state relative-caret-position="803">
+          <caret line="127" column="22" lean-forward="true" selection-start-line="127" selection-start-column="22" selection-end-line="127" selection-end-column="22" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#1819#2384#0" />
+            <element signature="e#2672#3990#0" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/search_lib.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="266" column="18" selection-start-line="266" selection-start-column="18" selection-end-line="266" selection-end-column="18" />
+        <state relative-caret-position="366">
+          <caret line="212" column="19" selection-start-line="212" selection-start-column="19" selection-end-line="212" selection-end-column="19" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
+            <element signature="e#7528#14122#0" />
+            <element signature="e#8599#9867#0" />
+            <element signature="e#9195#9240#0" />
+            <element signature="e#9758#9867#0" />
+            <element signature="e#10295#12255#0" />
+            <element signature="e#13890#20480#0" />
+            <element signature="e#20622#20668#0" />
           </folding>
         </state>
       </provider>
