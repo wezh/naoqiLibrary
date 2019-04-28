@@ -36,7 +36,7 @@ passwd = "nimdA"
 ROBOT_IP = "192.168.1.105"
 ROBOT_PORT = 9559
 
-checklist_borrow = ("borrow", "take", "ladies")
+checklist_borrow = ("borrow", "take")
 checklist_return = ("return", "back")
 checklist_end = ("no", "not")
 
@@ -72,7 +72,9 @@ def SpeechTransferToText(speech_file):
 
     for result in response.results:
         text = "{}".format(result.alternatives[0].transcript)
+        print("User: " + text)
         return text
+
 
 
 # Transfer audio or query files from NAO Robot
@@ -125,13 +127,17 @@ def recordAudioFromNao():
 
 # Capture Book Cover
 def photoCapture():
-    tts.say("Waiting for book cover...")
-    time.sleep(1)
-    tts.say("Picture capturing")
+    print ("Please put the book cover in front of my eyes.")
+    tts.say("Please put the book cover in front of my eyes.")
+    time.sleep(2)
+    print ("Capturing picture...")
+    tts.say("Capturing picture...")
     time.sleep(2)
     photo.setResolution(2)
     photo.setPictureFormat("png")
     photo.takePictures(1, "/home/nao/Library/queryTemp/", "query")
+    print ("Finished")
+    tts.say("Finished")
 
 
 def checkBooks(numberOfBorrowedBooks):
@@ -172,11 +178,11 @@ except RuntimeError:
 current_hour = datetime.datetime.today().hour
 
 if (current_hour < 12):
-    tts.say("Good morning! Welcome to Vaasa Library! Show me your code to identify yourself!")
+    tts.say("Good morning! Welcome to Robot Library! Please show me your code to identify yourself!")
 elif (current_hour < 19):
-    tts.say("Good afternoon! Welcome to Vaasa Library! Show me your code to identify yourself!")
+    tts.say("Good afternoon! Welcome to Robot Library! Please show me your code to identify yourself!")
 elif (current_hour <= 24):
-    tts.say("Good evening! Welcome to Vaasa Library! Show me your code to identify yourself!")
+    tts.say("Good evening! Welcome to Robot Library! Please show me your code to identify yourself!")
 
 identity = barcode_reader(session)
 tts.say("Barcode has read.")
@@ -186,19 +192,25 @@ numberOfBorrowedBooks = int(str(identity[0][0]).split(',')[2])
 print("Username: " + name)
 print("ID Number:" + id_number)
 print("Borrowed Books: " + str(numberOfBorrowedBooks))
-tts.say("Welcome!" + name + "! Your id is " + id_number)
+tts.say("Welcome!" + name)
+tts.say("Your ID is: " + id_number)
 
 if (checkBooks(numberOfBorrowedBooks) and numberOfBorrowedBooks == 0):
+    print("You don't have any books in your account.")
     tts.say("You don't have any books in your account.")
 elif (checkBooks(numberOfBorrowedBooks) and numberOfBorrowedBooks == 1):
+    print("You borrowed " + str(numberOfBorrowedBooks) + " book.")
     tts.say("You borrowed " + str(numberOfBorrowedBooks) + " book.")
 elif (checkBooks((numberOfBorrowedBooks) and numberOfBorrowedBooks > 1)):
+    print("You borrowed " + str(numberOfBorrowedBooks) + " books.")
     tts.say("You borrowed " + str(numberOfBorrowedBooks) + " books.")
 
-exit_flag = False
+exit_flag_1 = False
+exit_flag_2 = False
 
 while True:
 
+    print ("What can I do for you?")
     tts.say("What can I do for you?")
 
     recordAudioFromNao()
@@ -206,14 +218,11 @@ while True:
     first_answer = SpeechTransferToText(local_recordingFile)
 
     if any(s in first_answer for s in checklist_borrow):
-        print("key word GET!")
-        tts.say("Sure! I am going to take a picture of the book you would like to borrow, please put the book cover in front of my eyes")
-        print ("Sure! I am going to take a picture of the book you would like to borrow, please put the book cover in front of my eyes")
+        tts.say("Sure! I am going to take a picture of the book you would like to borrow")
+        print ("Sure! I am going to take a picture of the book you would like to borrow")
 
         while True:
             photoCapture()
-            tts.say("Finished")
-
             TransferFile(ROBOT_IP, user, passwd, nao_photoPath, local_photoPath)
             print("transfer photo correctly!")
             print('##############################################')
@@ -240,30 +249,27 @@ while True:
             (queryKps, queryDescs) = cd.describe(gray)
 
             results = cm.search(queryKps, queryDescs)
-            print (results)
 
             if len(results) == 0:
-                tts.say("I could not find a match for that cover! Do you want me to take a picture again?")
                 print("I could not find a match for that cover! Do you want me to take a picture again?")
+                tts.say("I could not find a match for that cover! Do you want me to take a picture again?")
                 recordAudioFromNao()
                 TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                 answer = SpeechTransferToText(local_recordingFile)
-
-                print("User: " + answer)
                 print('##############################################')
 
                 if "no" not in answer:
+                    print("Sure")
                     tts.say("Sure!")
-                    print ("Sure")
                 else:
-                    tts.say("OK. Anything else I can do for you?")
                     print("OK. Anything else I can do for you?")
+                    tts.say("OK. Anything else I can do for you?")
                     recordAudioFromNao()
                     TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                     answer = SpeechTransferToText(local_recordingFile)
-                    print("User : " + answer)
                     if "no" not in answer:
-                        tts.say("Sure!")
+                        print ("OK.")
+                        tts.say("OK.")
                         break
                     else:
                         tts.say("Good Bye!" + name)
@@ -289,21 +295,24 @@ while True:
                         TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                         answer = SpeechTransferToText(local_recordingFile)
                         if "no" not in answer:
-                            tts.say("Prefect! I added this one to your account! " )
+                            print("Perfect! I will add this one to your account! ")
+                            tts.say("Perfect! I will add this one to your account! ")
                             numberOfBorrowedBooks += 1
                             tts.say("Now you have " + str(numberOfBorrowedBooks) + " books in you account!")
                             print("Now you have " + str(numberOfBorrowedBooks) + " books in you account!")
+                            print("Anything else I can do for you?")
                             tts.say('Anything else I can do for you?')
                             recordAudioFromNao()
                             TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                             answer = SpeechTransferToText(local_recordingFile)
                             if "no" not in answer:
+                                print("OK")
                                 tts.say("Ok!")
-                                exit_flag = True
+                                exit_flag_1 = True
                                 break
                             else:
                                 print ('Sure. Good Bye')
-                                tts.say("Sure, good bye")
+                                tts.say("Sure, Good bye")
                                 exit(1)
 
                         else:
@@ -317,7 +326,6 @@ while True:
                         recordAudioFromNao()
                         TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                         answer = SpeechTransferToText(local_recordingFile)
-                        print("User: " + answer)
                         print('##############################################')
                         if "no" not in answer:
                             tts.say("OK! I will take a picture again")
@@ -329,26 +337,25 @@ while True:
                             recordAudioFromNao()
                             TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                             answer = SpeechTransferToText(local_recordingFile)
-                            print("User speaking: " + answer)
                             if "no" not in answer:
-                                tts.say("Sure!")
-                                exit_flag = True
+                                tts.say("OK!")
+                                exit_flag_1 = True
                                 break
                             else:
                                 print ("OK, Good Bye")
                                 exit(1)
-            if exit_flag:
+            if exit_flag_1:
                 break
 
     if any(s in first_answer for s in checklist_return):
         print("key word GET!")
         tts.say(
-            "Sure! I am going to take a picture of the book you would like to return, please put the book cover in front of my eyes")
-        print("Sure! I am going to take a picture of the book you would like to return, please put the book cover in front of my eyes")
+            "Sure! I am going to take a picture of the book you would like to return")
+        print(
+            "Sure! I am going to take a picture of the book you would like to return")
+
         while True:
             photoCapture()
-            tts.say("Finished")
-
             TransferFile(ROBOT_IP, user, passwd, nao_photoPath, local_photoPath)
             print("transfer photo correctly!")
             print('##############################################')
@@ -375,27 +382,24 @@ while True:
             (queryKps, queryDescs) = cd.describe(gray)
 
             results = cm.search(queryKps, queryDescs)
-            print(results)
 
             if len(results) == 0:
-                tts.say("I could not find a match for that cover! Do you want me to take a picture again?")
                 print("I could not find a match for that cover! Do you want me to take a picture again?")
+                tts.say("I could not find a match for that cover! Do you want me to take a picture again?")
                 recordAudioFromNao()
                 TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                 answer = SpeechTransferToText(local_recordingFile)
-
-                print("User: " + answer)
                 print('##############################################')
 
                 if "no" not in answer:
-                    tts.say("Sure!")
+                    print("OK.")
+                    tts.say("OK.")
                 else:
-                    tts.say("OK. Anything else I can do for you?")
                     print("OK. Anything else I can do for you?")
+                    tts.say("OK. Anything else I can do for you?")
                     recordAudioFromNao()
                     TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                     answer = SpeechTransferToText(local_recordingFile)
-                    print("User : " + answer)
                     if "no" not in answer:
                         tts.say("Sure!")
                         break
@@ -423,19 +427,22 @@ while True:
                         TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                         answer = SpeechTransferToText(local_recordingFile)
                         if "no" not in answer:
-                            tts.say("Prefect! I remote this one to your account! ")
+                            print("Perfect! I would remove this one to your account! ")
+                            tts.say("Perfect! I would remove this one to your account! ")
                             numberOfBorrowedBooks -= 1
-                            tts.say("Now you have " + str(numberOfBorrowedBooks) + "books in you account!")
+                            print("Now you have " + str(numberOfBorrowedBooks) + " books in you account!")
+                            tts.say("Now you have " + str(numberOfBorrowedBooks) + " books in you account!")
+                            print("Anything else I can do for you?")
                             tts.say('Anything else I can do for you?')
                             recordAudioFromNao()
                             TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                             answer = SpeechTransferToText(local_recordingFile)
                             if "no" not in answer:
                                 tts.say("Ok!")
-                                exit_flag = True
+                                exit_flag_2 = True
                                 break
                             else:
-                                print('Sure. Good Bye')
+                                print('Sure, Good Bye')
                                 tts.say("Sure, good bye")
                                 exit(1)
 
@@ -444,41 +451,39 @@ while True:
                             break
 
                     else:
-                        tts.say(
-                            "Matching ratio is too low to identify for the most relevant match. Do you want me to take a photo again?")
                         print(
+                            "Matching ratio is too low to identify for the most relevant match. Do you want me to take a photo again?")
+                        tts.say(
                             "Matching ratio is too low to identify for the most relevant match. Do you want me to take a photo again?")
                         print("##############################################")
                         recordAudioFromNao()
                         TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                         answer = SpeechTransferToText(local_recordingFile)
-                        print("User: " + answer)
                         print('##############################################')
-
                         if "no" not in answer:
-                            tts.say("Sure!")
+                            print("OK! I will take a picture again")
+                            tts.say("OK! I will take a picture again")
                             break
                         else:
-                            tts.say("OK. Anything else I can do for you?")
                             print("OK. Anything else I can do for you?")
+                            tts.say("OK. Anything else I can do for you?")
                             recordAudioFromNao()
                             TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
                             answer = SpeechTransferToText(local_recordingFile)
-                            print("User speaking: " + answer)
                             if "no" not in answer:
                                 tts.say("Sure!")
-                                exit_flag = True
+                                exit_flag_2 = True
                                 break
                             else:
                                 print("OK, Good Bye")
                                 exit(1)
-            if exit_flag:
+            if exit_flag_2:
                 break
 
     if 'no' in first_answer:
         tts.say("OK, Have a nice day")
         exit(1)
-
-    if any(s not in first_answer for s in (checklist_borrow + checklist_return + checklist_end)):
-        tts.say("I can't recognize you. Please say again")
-        print ("I can't recognize you. Please say again")
+    #
+    # if any(s not in first_answer for s in (checklist_borrow + checklist_return + checklist_end)):
+    #     tts.say("I can't recognize you. Please say again")
+    #     print ("I can't recognize you. Please say again")
