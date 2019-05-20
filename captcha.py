@@ -6,7 +6,7 @@ import io
 import datetime
 import time
 import sys
-
+from random import choice
 # Import Folder looping API
 import glob
 
@@ -37,7 +37,7 @@ import random
 import numpy as np
 
 import tensorflow.gfile as gfile
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import PIL.Image as Image
 import tensorflow as tf
 from keras.models import load_model
@@ -63,6 +63,10 @@ local_captchaPath = "./captcha/"
 
 model = load_model(MODEL_FILE)
 graph = tf.get_default_graph()
+
+correct=['Wow! I am correct!', 'great! I guess right again', 'Seems I am right again!', "Wonderful!", 'Nice! I am correct!']
+wrong=["Oh! I am wrong!", "Oh no! Let's try again!", "I am wrong! Let's try again"]
+last_guess = "Last chance! Let's go!"
 
 
 def vec2text(vector):
@@ -196,25 +200,25 @@ elif (current_hour < 19):
 elif (current_hour <= 24):
     tts.say("Good evening!")
 
-tts.say("Please show me your code to identify yourself!")
+tts.say("Please show your code to me!")
 
 identity = barcode_reader(session)
 tts.say("Barcode has read.")
 name = str(identity[0][0]).split(',')[0]
 id_number = str(identity[0][0]).split(',')[1]
-numberOfBorrowedBooks = int(str(identity[0][0]).split(',')[2])
 print("Username: " + name)
 print("ID Number:" + id_number)
 tts.say("Welcome!" + name)
 
-tts.say('Do you want me to start captcha test?')
+tts.say('Do you want me to start CAPTCHA test?')
 
 recordAudioFromNao()
 TransferFile(ROBOT_IP, user, passwd, nao_recordingPath, local_recordingPath)
 first_answer = SpeechTransferToText(local_recordingFile)
 
 if 'yes' in first_answer:
-    tts.say("Sure! Let's start! There will be 10 random captcha, If I guess more than half of them, then I would pass the test. Here we go!")
+    tts.say("Sure! Let's start! There will be 15 random captcha picture, " +
+            "If I guess more than half of them, I would pass the test. Here we go!")
     count = 0
     for i in range(15):
         text, image = random_captcha('./captcha/')
@@ -224,19 +228,39 @@ if 'yes' in first_answer:
         with graph.as_default():
             prediction = model.predict(image)
             prediction_text = vec2text(prediction)
-            tts.say('Captcha number' + str(i) + 'is' + prediction_text)
+            tts.say('Captcha number' + str(i + 1) + 'is' + prediction_text)
             print('Prediction by Robot: ' + prediction_text)
-            if text.rstrip('.png') == prediction_text:
-                print ('I am correct!')
-                tts.say('I am correct!')
-                count += 1
+
+            if i == 0:
+                if text.rstrip('.png') == prediction_text:
+                    correct_answer = correct[0]
+                    print(correct_answer)
+                    tts.say(correct_answer)
+                    count += 1
+                else:
+                    wrong_answer = wrong[0]
+                    print(wrong_answer)
+                    tts.say(wrong_answer)
             else:
-                print ("Oh! I am wrong! Let's try again!")
-                tts.say("Oh! I am wrong! Let's try again!")
+                if text.rstrip('.png') == prediction_text:
+                    correct_answer = choice(correct)
+                    print (correct_answer)
+                    tts.say(correct_answer)
+                    count += 1
+                else:
+                    wrong_answer = choice(wrong)
+                    print (wrong_answer)
+                    tts.say(wrong_answer)
         cv2.waitKey(0)
 
-    if count > 5:
-        tts.say("Wow! I am a human now!")
+    correct_ratio = float(count) / 15 * 100
+
+    if count > 0.5:
+        print('Correct Ratio is ' + str(round(correct_ratio, 2)) + '%')
+        tts.say('Correct Ratio is' + str(round(correct_ratio, 2)) + 'percent')
+        tts.say("Wow! I am a human being now!")
     else:
-        tts.say("OK, I would do my robot work later.")
+        print('Correct Ratio is ' + str(round(correct_ratio, 2)) + '%')
+        tts.say('Correct Ratio is' + str(round(correct_ratio, 2)) + 'percent')
+        tts.say("OK, I am far away to be a human!")
 
